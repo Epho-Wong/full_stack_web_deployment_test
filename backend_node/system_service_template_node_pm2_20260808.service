@@ -1,0 +1,56 @@
+[Unit]
+Description=test_react_django_node_pm2_runtime
+After=network.target
+
+[Service]
+Type=simple
+User=myservice
+Group=myservice
+# use nologin & no-home-path user account in production mode
+
+#ExecStartPre=+/usr/bin/mkdir -p /var/log/test_django_20260730/                    //create log path manually
+#ExecStartPre=+/usr/bin/chown myservice:myservice /var/log/test_django_20260730/
+
+WorkingDirectory=/opt/20260803_react_django_nodejs/backend_node
+EnvironmentFile=/opt/20260803_react_django_nodejs/.env
+#Environment=PYTHONUNBUFFERED=1
+#Environment=XDG_RUNTIME_DIR=/run/user/997 #xdg path redirection for gunicorn and it should be created manually first with UID (check cmd: id myservice) and chown
+
+Environment=NODE_ENV=production
+Environment=HOME=/var/lib/home_nologin
+Environment=PM2_HOME=/var/lib/home_nologin/pm2
+#Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=PATH=/opt/node/bin:/usr/local/bin
+
+#RuntimeDirectory=backend_django
+#RuntimeDirectoryMode=0750
+
+ExecStart=/usr/bin/env NODE_ENV=production /opt/node/bin/pm2-runtime start /opt/20260803_react_django_nodejs/backend_node/ecosystem.config.js
+ExecReload=/usr/bin/env NODE_ENV=production /opt/node/bin/pm2 reload /opt/20260803_react_django_nodejs/backend_node/ecosystem.config.js
+
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+Restart=always
+RestartSec=5s
+#StartLimitIntervalSec=60 //unknown key name cause systemd version...
+#StartLimitBurst=5
+
+MemoryMax=2G
+CPUQuota=80%
+
+LimitNOFILE=65536
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/test/ /var/lib/home_nologin/
+
+StandardOutput=journal
+StandardError=journal
+#SyslogIdentifier=test_django_20260730
+
+[Install]
+WantedBy=multi-user.target
